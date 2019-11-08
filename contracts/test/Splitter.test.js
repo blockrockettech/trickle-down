@@ -18,6 +18,7 @@ contract('Trickle down tests', function ([creator, another, random, ...accounts]
 
     beforeEach(async function () {
        this.splitter = await TrickleDownSplitter.new(fromCreator);
+        (await this.splitter.isWhitelisted(creator)).should.be.true;
     });
 
     describe('participant management', function() {
@@ -60,6 +61,14 @@ contract('Trickle down tests', function ([creator, another, random, ...accounts]
                expectRevert(
                    this.splitter.removeParticipantAtIndex(2),
                    "No addresses have been supplied"
+               );
+           });
+
+           it('reverts when trying to remove a participant at an out of bounds index', async function() {
+               await this.splitter.setParticipants(participants);
+               expectRevert(
+                   this.splitter.removeParticipantAtIndex(6),
+                   "Array out of bounds reference"
                );
            });
         });
