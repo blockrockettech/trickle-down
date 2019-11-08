@@ -4,7 +4,7 @@ require('chai').should();
 
 const TrickleDownSplitter = artifacts.require('TrickleDownSplitter');
 
-contract('Tokenlandia token custom implementation tests', function ([creator, auction, another, ...accounts]) {
+contract('Trickle down tests', function ([creator, another, random, ...accounts]) {
     const participants = [
         accounts[0],
         accounts[1],
@@ -14,6 +14,7 @@ contract('Tokenlandia token custom implementation tests', function ([creator, au
     ];
 
     const fromCreator = { from: creator };
+    const fromRandom = { from: random };
 
     beforeEach(async function () {
        this.splitter = await TrickleDownSplitter.new(fromCreator);
@@ -42,6 +43,10 @@ contract('Tokenlandia token custom implementation tests', function ([creator, au
                latestParticipantFromContract.should.be.equal(another);
            });
 
+            it('reverts when adding a participant from address zero', async function () {
+                expectRevert.unspecified(this.splitter.addParticipant(constants.ZERO_ADDRESS, fromCreator));
+            });
+
            it('can remove a participant', async function () {
                await this.splitter.setParticipants(participants, fromCreator);
 
@@ -49,6 +54,33 @@ contract('Tokenlandia token custom implementation tests', function ([creator, au
 
                const participant3 = await this.splitter.participants(2);
                participant3.should.be.equal(participants[4]);
+           });
+
+           it('reverts when calling remove for an undefined participant list', async function () {
+               expectRevert(
+                   this.splitter.removeParticipantAtIndex(2),
+                   "No addresses have been supplied"
+               );
+           });
+        });
+        describe('when not whitelisted', function() {
+           it('reverts when setting up a list of participants', async function () {
+               expectRevert(this.splitter.setParticipants(participants, fromRandom),
+                   "WhitelistedRole: caller does not have the Whitelisted role"
+               );
+           });
+
+           it('reverts when adding a new participant', async function () {
+               expectRevert(this.splitter.addParticipant(another, fromRandom),
+                   "WhitelistedRole: caller does not have the Whitelisted role"
+               );
+           });
+
+           it('reverts when removing a participant', async function() {
+              expectRevert(
+                  this.splitter.removeParticipantAtIndex(1),
+                  "WhitelistedRole: caller does not have the Whitelisted role"
+              );
            });
         });
     });
