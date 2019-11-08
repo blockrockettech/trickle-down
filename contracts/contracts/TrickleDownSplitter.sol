@@ -48,10 +48,10 @@ contract TrickleDownSplitter is Pausable, WhitelistedRole {
         uint256 numOfParticipants = participants.length;
         uint256 individualSharePercentage = modulo.div(numOfParticipants);
         uint256 singleUnitOfValue = msg.value.div(modulo);
+        uint256 individualShare = singleUnitOfValue.mul(individualSharePercentage);
         for(uint i = 0; i < participants.length; i++) {
-            address payable curator = participants[i];
-            uint256 individualShare = singleUnitOfValue.mul(individualSharePercentage);
-            (bool success, ) = curator.call.value(individualShare)("");
+            address payable participant = participants[i];
+            (bool success, ) = participant.call.value(individualShare)("");
             require(success, "Unable to send funds");
         }
     }

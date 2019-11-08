@@ -1,4 +1,4 @@
-const {BN, constants, expectRevert} = require('openzeppelin-test-helpers');
+const {BN, constants, expectRevert, ether, balance} = require('openzeppelin-test-helpers');
 
 require('chai').should();
 
@@ -95,13 +95,47 @@ contract('Trickle down tests', function ([creator, another, random, ...accounts]
     });
 
     describe('splitting funds', function() {
-       beforeEach(async function () {
-           await this.splitter.setParticipants(participants, fromCreator);
-       });
+        it('should revert when the contract is paused', async function() {
+            await this.splitter.pause(fromCreator);
+            await expectRevert.unspecified(this.splitter.splitFunds(fromCreator));
+        });
 
-       it('should revert when the contract is paused', async function() {
-          await this.splitter.pause(fromCreator);
-          await expectRevert.unspecified(this.splitter.splitFunds(fromCreator));
-       });
+        describe('when no participants have been set', function() {
+            it('reverts', async function() {
+               expectRevert(
+                   this.splitter.splitFunds(fromCreator),
+                   "Cannot split as there are no addresses set"
+               );
+            });
+        });
+
+        describe('when participants have been set', function () {
+            const oneEth = ether('1');
+
+            beforeEach(async function () {
+                await this.splitter.setParticipants(participants, fromCreator);
+            });
+
+            it('evenly splits the funds', async function () {
+                const participant1Balance = await balance.tracker(participants[0]);
+                const participant2Balance = await balance.tracker(participants[1]);
+                const participant3Balance = await balance.tracker(participants[2]);
+                const participant4Balance = await balance.tracker(participants[3]);
+                const participant5Balance = await balance.tracker(participants[4]);
+
+                await this.splitter.splitFunds({ value: oneEth, ...fromCreator });
+
+                const modulo = new BN('10000');
+                const individualSharePercentage = modulo.div(new BN(participants.length.toString()));
+                const singleUnitOfValue = oneEth.div(modulo);
+                const individualShare = singleUnitOfValue.mul(individualSharePercentage);
+
+                (await participant1Balance.delta()).should.be.bignumber.equal(individualShare);
+                (await participant2Balance.delta()).should.be.bignumber.equal(individualShare);
+                (await participant3Balance.delta()).should.be.bignumber.equal(individualShare);
+                (await participant4Balance.delta()).should.be.bignumber.equal(individualShare);
+                (await participant5Balance.delta()).should.be.bignumber.equal(individualShare);
+            });
+        });
     });
 });
