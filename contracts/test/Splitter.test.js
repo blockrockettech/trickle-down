@@ -45,7 +45,7 @@ contract('Trickle down tests', function ([creator, another, random, ...accounts]
            });
 
             it('reverts when adding a participant from address zero', async function () {
-                expectRevert.unspecified(this.splitter.addParticipant(constants.ZERO_ADDRESS, fromCreator));
+                await expectRevert.unspecified(this.splitter.addParticipant(constants.ZERO_ADDRESS, fromCreator));
             });
 
            it('can remove a participant', async function () {
@@ -58,39 +58,50 @@ contract('Trickle down tests', function ([creator, another, random, ...accounts]
            });
 
            it('reverts when calling remove for an undefined participant list', async function () {
-               expectRevert(
-                   this.splitter.removeParticipantAtIndex(2),
+               await expectRevert(
+                   this.splitter.removeParticipantAtIndex(2, fromCreator),
                    "No addresses have been supplied"
                );
            });
 
            it('reverts when trying to remove a participant at an out of bounds index', async function() {
-               await this.splitter.setParticipants(participants);
-               expectRevert(
-                   this.splitter.removeParticipantAtIndex(6),
+               await this.splitter.setParticipants(participants, fromCreator);
+               await expectRevert(
+                   this.splitter.removeParticipantAtIndex(6, fromCreator),
                    "Array out of bounds reference"
                );
            });
         });
         describe('when not whitelisted', function() {
            it('reverts when setting up a list of participants', async function () {
-               expectRevert(this.splitter.setParticipants(participants, fromRandom),
+               await expectRevert(this.splitter.setParticipants(participants, fromRandom),
                    "WhitelistedRole: caller does not have the Whitelisted role"
                );
            });
 
            it('reverts when adding a new participant', async function () {
-               expectRevert(this.splitter.addParticipant(another, fromRandom),
+               await expectRevert(this.splitter.addParticipant(another, fromRandom),
                    "WhitelistedRole: caller does not have the Whitelisted role"
                );
            });
 
            it('reverts when removing a participant', async function() {
-              expectRevert(
-                  this.splitter.removeParticipantAtIndex(1),
+              await expectRevert(
+                  this.splitter.removeParticipantAtIndex(1, fromRandom),
                   "WhitelistedRole: caller does not have the Whitelisted role"
               );
            });
         });
+    });
+
+    describe('splitting funds', function() {
+       beforeEach(async function () {
+           await this.splitter.setParticipants(participants, fromCreator);
+       });
+
+       it('should revert when the contract is paused', async function() {
+          await this.splitter.pause(fromCreator);
+          await expectRevert.unspecified(this.splitter.splitFunds(fromCreator));
+       });
     });
 });
