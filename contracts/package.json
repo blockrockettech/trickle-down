@@ -1,0 +1,15 @@
+{
+  "name": "trickle-down-contracts",
+  "version": "1.0.0",
+  "description": "Smart contracts for the trickle down project",
+  "main": "index.js",
+  "scripts": {
+    "test": "truffle test"
+  },
+  "author": "Blockrocket.tech",
+  "license": "MIT",
+  "dependencies": {
+    "@truffle/hdwallet-provider": "^1.0.24",
+    "truffle-plugin-verify": "^0.3.5"
+  }
+}
