@@ -97,13 +97,13 @@ contract('Trickle down tests', function ([creator, another, random, ...accounts]
     describe('splitting funds', function() {
         it('should revert when the contract is paused', async function() {
             await this.splitter.pause(fromCreator);
-            await expectRevert.unspecified(this.splitter.splitFunds(fromCreator));
+            await expectRevert.unspecified(this.splitter.splitFunds(0, fromCreator));
         });
 
         describe('when no participants have been set', function() {
             it('reverts', async function() {
                expectRevert(
-                   this.splitter.splitFunds(fromCreator),
+                   this.splitter.splitFunds(0, fromCreator),
                    "Cannot split as there are no addresses set"
                );
             });
@@ -111,6 +111,7 @@ contract('Trickle down tests', function ([creator, another, random, ...accounts]
 
         describe('when participants have been set', function () {
             const oneEth = ether('1');
+            const quarterEth = ether('0.25');
 
             beforeEach(async function () {
                 await this.splitter.setParticipants(participants, fromCreator);
@@ -123,11 +124,17 @@ contract('Trickle down tests', function ([creator, another, random, ...accounts]
                 const participant4Balance = await balance.tracker(participants[3]);
                 const participant5Balance = await balance.tracker(participants[4]);
 
-                await this.splitter.splitFunds({ value: oneEth, ...fromCreator });
+                await web3.eth.sendTransaction({
+                    from: creator,
+                    to: this.splitter.address,
+                    value: oneEth
+                });
+
+                await this.splitter.splitFunds(quarterEth, fromCreator);
 
                 const modulo = new BN('10000');
+                const singleUnitOfValue = quarterEth.div(modulo);
                 const individualSharePercentage = modulo.div(new BN(participants.length.toString()));
-                const singleUnitOfValue = oneEth.div(modulo);
                 const individualShare = singleUnitOfValue.mul(individualSharePercentage);
 
                 (await participant1Balance.delta()).should.be.bignumber.equal(individualShare);

@@ -40,14 +40,14 @@ contract TrickleDownSplitter is Pausable, WhitelistedRole {
         participants.length--;
     }
 
-    function splitFunds() whenNotPaused external payable {
+    function splitFunds(uint256 value) whenNotPaused external payable {
         require(participants.length > 0, "Cannot split as there are no addresses set");
-        require(msg.value > 0, "No value has been sent");
+        require(value > 0, "No value has been sent");
 
         uint256 modulo = 10000;
         uint256 numOfParticipants = participants.length;
         uint256 individualSharePercentage = modulo.div(numOfParticipants);
-        uint256 singleUnitOfValue = msg.value.div(modulo);
+        uint256 singleUnitOfValue = value.div(modulo);
         uint256 individualShare = singleUnitOfValue.mul(individualSharePercentage);
         for(uint i = 0; i < participants.length; i++) {
             address payable participant = participants[i];
