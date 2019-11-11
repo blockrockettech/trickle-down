@@ -1,5 +1,5 @@
 const {BN, constants, expectRevert, ether, balance} = require('openzeppelin-test-helpers');
-
+const gasSpent = require('./gas-spent-helper');
 require('chai').should();
 
 const TrickleDownSplitter = artifacts.require('TrickleDownSplitter');
@@ -16,12 +16,23 @@ contract('Trickle down tests', function ([creator, another, random, ...accounts]
     const fromCreator = { from: creator };
     const fromRandom = { from: random };
 
+    const oneEth = ether('1');
+    const quarterEth = ether('0.25');
+
+    async function topUpContract(address, amount, from) {
+        await web3.eth.sendTransaction({
+            from,
+            to: address,
+            value: amount
+        });
+    }
+
     beforeEach(async function () {
        this.splitter = await TrickleDownSplitter.new(fromCreator);
         (await this.splitter.isWhitelisted(creator)).should.be.true;
     });
 
-    describe('participant management', function() {
+    describe('participant management', function () {
         describe('when whitelisted', function() {
            it('can set a list of participants in one transaction', async function() {
                await this.splitter.setParticipants(participants, fromCreator);
@@ -60,7 +71,7 @@ contract('Trickle down tests', function ([creator, another, random, ...accounts]
            it('reverts when calling remove for an undefined participant list', async function () {
                await expectRevert(
                    this.splitter.removeParticipantAtIndex(2, fromCreator),
-                   "No addresses have been supplied"
+                   "The participant addresses list is empty"
                );
            });
 
@@ -94,7 +105,7 @@ contract('Trickle down tests', function ([creator, another, random, ...accounts]
         });
     });
 
-    describe('splitting funds', function() {
+    describe('splitting funds', function () {
         it('should revert when the contract is paused', async function() {
             await this.splitter.pause(fromCreator);
             await expectRevert.unspecified(this.splitter.splitFunds(0, fromCreator));
@@ -102,17 +113,14 @@ contract('Trickle down tests', function ([creator, another, random, ...accounts]
 
         describe('when no participants have been set', function() {
             it('reverts', async function() {
-               expectRevert(
+                await expectRevert(
                    this.splitter.splitFunds(0, fromCreator),
-                   "Cannot split as there are no addresses set"
+                   "The participant addresses list is empty"
                );
             });
         });
 
         describe('when participants have been set', function () {
-            const oneEth = ether('1');
-            const quarterEth = ether('0.25');
-
             beforeEach(async function () {
                 await this.splitter.setParticipants(participants, fromCreator);
             });
@@ -124,11 +132,7 @@ contract('Trickle down tests', function ([creator, another, random, ...accounts]
                 const participant4Balance = await balance.tracker(participants[3]);
                 const participant5Balance = await balance.tracker(participants[4]);
 
-                await web3.eth.sendTransaction({
-                    from: creator,
-                    to: this.splitter.address,
-                    value: oneEth
-                });
+                await topUpContract(this.splitter.address, oneEth, creator);
 
                 await this.splitter.splitFunds(quarterEth, fromCreator);
 
@@ -143,6 +147,80 @@ contract('Trickle down tests', function ([creator, another, random, ...accounts]
                 (await participant4Balance.delta()).should.be.bignumber.equal(individualShare);
                 (await participant5Balance.delta()).should.be.bignumber.equal(individualShare);
             });
+
+            it('reverts when asking the contract to split nothing', async function () {
+                await topUpContract(this.splitter.address, quarterEth, creator);
+                await expectRevert(
+                  this.splitter.splitFunds(0, fromCreator),
+                  "No value has been specified"
+                );
+            });
+
+            it('reverts when splitting without a contract balance', async function () {
+                await expectRevert(
+                    this.splitter.splitFunds(quarterEth, fromCreator),
+                    "There are no contract funds to send"
+                );
+            });
         });
     });
+
+    describe('withdrawing funds', function () {
+        describe('when whitelisted', function () {
+           describe('when contract has a balance', function () {
+               beforeEach(async function () {
+                   await topUpContract(this.splitter.address, oneEth, random);
+               });
+
+               async function withdrawAllFunds(context) {
+                   const creatorBalance = await balance.tracker(creator);
+                   ({receipt: context.receipt} = await context.splitter.withdrawAllFunds(fromCreator));
+                   (await creatorBalance.delta()).should.be.bignumber.equal(oneEth.sub(gasSpent(context.receipt)));
+               }
+
+               describe('when the contract is paused', function () {
+                   it('sends the contract balance to the sender', async function () {
+                       await this.splitter.pause(fromCreator);
+                       await withdrawAllFunds(this);
+                   });
+               });
+
+               describe('when the contract is not paused', function() {
+                   it('sends the contract balance to the sender', async function () {
+                       await withdrawAllFunds(this);
+                   });
+               });
+           });
+
+           describe('when contract does not have a balance', function () {
+               it('reverts', async function () {
+                   await expectRevert(
+                       this.splitter.withdrawAllFunds(fromCreator),
+                       "There are no contract funds to send"
+                   );
+               });
+           });
+        });
+
+        describe('when not whitelisted', function () {
+            describe('when contract has a balance', function () {
+                it('reverts', async function () {
+                    await topUpContract(this.splitter.address, oneEth, creator);
+                    await expectRevert(
+                        this.splitter.withdrawAllFunds(fromRandom),
+                        "WhitelistedRole: caller does not have the Whitelisted role"
+                    );
+                });
+            });
+
+            describe('when contract does not have a balance', function () {
+                it('reverts', async function () {
+                    await expectRevert(
+                      this.splitter.withdrawAllFunds(fromRandom),
+                      "WhitelistedRole: caller does not have the Whitelisted role"
+                    );
+                });
+            });
+        });
+    })
 });

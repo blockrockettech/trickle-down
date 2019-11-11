@@ -9,6 +9,16 @@ contract TrickleDownSplitter is Pausable, WhitelistedRole {
 
     address payable[] public participants;
 
+    modifier onlyWhenContractHasABalance() {
+        require(address(this).balance > 0, "There are no contract funds to send");
+        _;
+    }
+
+    modifier onlyWhenParticipantsExist(address payable[] memory _participants) {
+        require(_participants.length > 0, "The participant addresses list is empty");
+        _;
+    }
+
     constructor() public {
         super.addWhitelisted(msg.sender);
     }
@@ -23,9 +33,7 @@ contract TrickleDownSplitter is Pausable, WhitelistedRole {
         participants.push(participant);
     }
 
-    function removeParticipantAtIndex(uint256 index) onlyWhitelisted external {
-        require(participants.length > 0, "No addresses have been supplied");
-
+    function removeParticipantAtIndex(uint256 index) onlyWhitelisted onlyWhenParticipantsExist(participants) external {
         uint256 numOfParticipants = participants.length;
         uint256 lastParticipantIndex = numOfParticipants.sub(1);
         require(index <= lastParticipantIndex, "Array out of bounds reference");
@@ -40,9 +48,12 @@ contract TrickleDownSplitter is Pausable, WhitelistedRole {
         participants.length--;
     }
 
-    function splitFunds(uint256 value) whenNotPaused external payable {
-        require(participants.length > 0, "Cannot split as there are no addresses set");
-        require(value > 0, "No value has been sent");
+    function splitFunds(uint256 value)
+    whenNotPaused
+    onlyWhenParticipantsExist(participants)
+    onlyWhenContractHasABalance
+    external payable {
+        require(value > 0, "No value has been specified");
 
         uint256 modulo = 10000;
         uint256 numOfParticipants = participants.length;
@@ -56,7 +67,7 @@ contract TrickleDownSplitter is Pausable, WhitelistedRole {
         }
     }
 
-    function withdrawAllFunds() onlyWhitelisted external {
+    function withdrawAllFunds() onlyWhitelisted onlyWhenContractHasABalance external {
         (bool success, ) = msg.sender.call.value(address(this).balance)("");
         require(success, "Failed to withdraw contract funds");
     }
