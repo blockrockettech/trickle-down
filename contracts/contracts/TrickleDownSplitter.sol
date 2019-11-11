@@ -9,13 +9,10 @@ contract TrickleDownSplitter is Pausable, WhitelistedRole {
 
     address payable[] public participants;
 
+    event FundsSplit(uint256 value, address payable[] participants);
+
     modifier onlyWhenContractHasABalance() {
         require(address(this).balance > 0, "There are no contract funds to send");
-        _;
-    }
-
-    modifier onlyWhenParticipantsExist(address payable[] memory _participants) {
-        require(_participants.length > 0, "The participant addresses list is empty");
         _;
     }
 
@@ -33,8 +30,10 @@ contract TrickleDownSplitter is Pausable, WhitelistedRole {
         participants.push(participant);
     }
 
-    function removeParticipantAtIndex(uint256 index) onlyWhitelisted onlyWhenParticipantsExist(participants) external {
+    function removeParticipantAtIndex(uint256 index) onlyWhitelisted external {
         uint256 numOfParticipants = participants.length;
+        require(participants.length > 0, "The participant addresses list is empty");
+
         uint256 lastParticipantIndex = numOfParticipants.sub(1);
         require(index <= lastParticipantIndex, "Array out of bounds reference");
 
@@ -50,7 +49,6 @@ contract TrickleDownSplitter is Pausable, WhitelistedRole {
 
     function splitFunds(uint256 value)
     whenNotPaused
-    onlyWhenParticipantsExist(participants)
     onlyWhenContractHasABalance
     external payable {
         require(value > 0, "No value has been specified");
@@ -60,15 +58,18 @@ contract TrickleDownSplitter is Pausable, WhitelistedRole {
         uint256 individualSharePercentage = modulo.div(numOfParticipants);
         uint256 singleUnitOfValue = value.div(modulo);
         uint256 individualShare = singleUnitOfValue.mul(individualSharePercentage);
-        for(uint i = 0; i < participants.length; i++) {
+
+        for (uint i = 0; i < numOfParticipants; i++) {
             address payable participant = participants[i];
-            (bool success, ) = participant.call.value(individualShare)("");
+            (bool success,) = participant.call.value(individualShare)("");
             require(success, "Unable to send funds");
         }
+
+        emit FundsSplit(value, participants);
     }
 
-    function withdrawAllFunds() onlyWhitelisted onlyWhenContractHasABalance external {
-        (bool success, ) = msg.sender.call.value(address(this).balance)("");
+    function withdrawAllFunds() onlyWhitelisted external {
+        (bool success,) = msg.sender.call.value(address(this).balance)("");
         require(success, "Failed to withdraw contract funds");
     }
 
