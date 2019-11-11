@@ -60,4 +60,6 @@ contract TrickleDownSplitter is Pausable, WhitelistedRole {
         (bool success, ) = msg.sender.call.value(address(this).balance)("");
         require(success, "Failed to withdraw contract funds");
     }
+
+    function() external payable {}
 }
