@@ -2,7 +2,7 @@ const _ = require('lodash');
 
 const authTokenChecker = require('./middlewares/authTokenChecker');
 
-const contract = require('express').Router();
+const splitter = require('express').Router({mergeParams: true});
 
 // todo import service
 
@@ -19,6 +19,15 @@ const contract = require('express').Router();
 // } = require("../data/contractTypes");
 
 // Set this middleware as early as possible to protect all routes below
-contract.use(authTokenChecker);
+splitter.use(authTokenChecker);
 
-module.exports = contract;
+splitter.get('/balances', async (req, res, next) => {
+    return res
+        .status(200)
+        .json({
+            api: '0.01 ETH',
+            contract: '0.5 ETH',
+        });
+});
+
+module.exports = splitter;
