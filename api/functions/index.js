@@ -24,7 +24,7 @@ app.use(expressWinston.logger({
     expressFormat: true
 }));
 
-app.use('/network/:networkId/splitter', require('./api/routes/splitter'));
+app.use('/network/:chainId/splitter', require('./api/routes/splitter'));
 
 // N.B: final param needed - do not remove
 app.use(function (err, req, res, _) {
