@@ -56,7 +56,10 @@ contract('Trickle down tests', function ([creator, another, random, ...accounts]
             });
 
             it('reverts when adding a participant from address zero', async function () {
-                await expectRevert.unspecified(this.splitter.addParticipant(constants.ZERO_ADDRESS, fromCreator));
+                await expectRevert(
+                    this.splitter.addParticipant(constants.ZERO_ADDRESS, fromCreator),
+                    "Cannot add zero address as participant"
+                );
             });
 
             it('can remove a participant', async function () {

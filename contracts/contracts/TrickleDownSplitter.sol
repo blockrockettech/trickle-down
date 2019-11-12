@@ -20,17 +20,17 @@ contract TrickleDownSplitter is Pausable, WhitelistedRole {
         super.addWhitelisted(msg.sender);
     }
 
-    function setParticipants(address payable[] calldata _participants) onlyWhitelisted external {
+    function setParticipants(address payable[] calldata _participants) external onlyWhitelisted {
         require(_participants.length > 0, "No addresses have been supplied");
         participants = _participants;
     }
 
-    function addParticipant(address payable participant) onlyWhitelisted external {
-        require(participant != address(0));
+    function addParticipant(address payable participant) external onlyWhitelisted {
+        require(participant != address(0), "Cannot add zero address as participant");
         participants.push(participant);
     }
 
-    function removeParticipantAtIndex(uint256 index) onlyWhitelisted external {
+    function removeParticipantAtIndex(uint256 index) external onlyWhitelisted {
         uint256 numOfParticipants = participants.length;
         require(participants.length > 0, "The participant addresses list is empty");
 
@@ -48,9 +48,9 @@ contract TrickleDownSplitter is Pausable, WhitelistedRole {
     }
 
     function splitFunds(uint256 value)
+    external payable
     whenNotPaused
-    onlyWhenContractHasABalance
-    external payable {
+    onlyWhenContractHasABalance {
         require(value > 0, "No value has been specified");
 
         uint256 modulo = 10000;
@@ -61,6 +61,7 @@ contract TrickleDownSplitter is Pausable, WhitelistedRole {
 
         for (uint i = 0; i < numOfParticipants; i++) {
             address payable participant = participants[i];
+            /* solium-disable-next-line */
             (bool success,) = participant.call.value(individualShare)("");
             require(success, "Unable to send funds");
         }
@@ -68,7 +69,8 @@ contract TrickleDownSplitter is Pausable, WhitelistedRole {
         emit FundsSplit(value, participants);
     }
 
-    function withdrawAllFunds() onlyWhitelisted external {
+    function withdrawAllFunds() external onlyWhitelisted {
+        /* solium-disable-next-line */
         (bool success,) = msg.sender.call.value(address(this).balance)("");
         require(success, "Failed to withdraw contract funds");
     }
