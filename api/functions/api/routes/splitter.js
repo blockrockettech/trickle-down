@@ -3,7 +3,7 @@ const { utils } = require('ethers');
 const splitter = require('express').Router({mergeParams: true});
 
 const authTokenChecker = require('./middlewares/authTokenChecker');
-const { getHttpProvider }  = require('../web3/provider');
+const { getHttpProvider, getWallet }  = require('../web3/provider');
 const { getContractBalance, splitFunds } = require('../services/TrickleDownSplitterService');
 
 // Set this middleware as early as possible to protect all routes below
@@ -12,10 +12,10 @@ splitter.use(authTokenChecker);
 splitter.get('/balances', async (req, res, next) => {
     const chainId = req.params.chainId;
     const provider = getHttpProvider(chainId);
+    const wallet = getWallet(chainId);
     const contractBalance = await getContractBalance(provider, chainId);
 
-    const accounts = await provider.listAccounts();
-    const apiBalance = utils.formatEther(await provider.getBalance(accounts[0])).toString();
+    const apiBalance = utils.formatEther(await provider.getBalance(wallet.address)).toString();
 
     return res
         .status(200)
@@ -57,8 +57,8 @@ splitter.post('/split', async (req, res, next) => {
     const weiToSplit = utils.parseEther(ethToSplit.toString());
 
     const chainId = req.params.chainId;
-    const provider = getHttpProvider(chainId);
-    const tx = await splitFunds(provider, chainId, weiToSplit);
+    const wallet = getWallet(chainId);
+    const tx = await splitFunds(wallet, chainId, weiToSplit);
 
     return res.status(200)
         .json({

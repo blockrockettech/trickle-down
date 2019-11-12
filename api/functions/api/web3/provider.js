@@ -9,14 +9,13 @@ const httpProviderWeb3 = {};
 const walletForNetwork = {};
 
 function createWallet(network) {
-    let host = `http://127.0.0.1:7545`;
+    let provider = new ethers.providers.Web3Provider(new Web3.providers.HttpProvider('http://127.0.0.1:7545'));
+
     if (network != 5777) {
-        host = `https://${getNetworkName(network)}.infura.io/v3/${infura_key}`;
+        provider = ethers.getDefaultProvider(getNetworkName(network));
     }
 
-    return Wallet
-        .fromMnemonic(mnemonic)
-        .connect(new ethers.providers.Web3Provider(new Web3.providers.HttpProvider(host)));
+    return Wallet.fromMnemonic(mnemonic).connect(provider);
 }
 
 const getHttpProvider = (network) => {

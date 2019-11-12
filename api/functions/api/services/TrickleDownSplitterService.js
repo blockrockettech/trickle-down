@@ -6,12 +6,12 @@ async function getContractBalance(provider, network) {
     return utils.formatEther(await provider.getBalance(contractAddress)).toString();
 }
 
-async function splitFunds(provider, network, weiToSplit) {
+async function splitFunds(signer, network, weiToSplit) {
     const contractAddress = TrickleDownSplitterTruffleConfig.networks[network].address;
     const contract = new ethers.Contract(
         contractAddress,
         TrickleDownSplitterTruffleConfig.abi,
-        provider.getSigner(),
+        signer
     );
     return await contract.splitFunds(utils.bigNumberify(weiToSplit));
 }
