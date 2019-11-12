@@ -2,4 +2,4 @@
 
 firebase use trickle-down-6c7ca;
 
-firebase deploy;
+firebase deploy --only functions;
