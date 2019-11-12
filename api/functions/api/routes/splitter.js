@@ -37,13 +37,21 @@ splitter.post('/split', async (req, res, next) => {
     if (amount && Number(amount) > 5) {
         return res.status(500)
             .json({
-                msg: 'Amount too high - must be lower than 5'
+                msg: 'Amount too high - must be less than or equal to 5'
             });
     }
 
     const coinGeckoPriceUrl = "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd,gbp,eur";
     const coinGeckoPrices = (await axios.get(coinGeckoPriceUrl)).data;
     const { ethereum } = coinGeckoPrices;
+
+    if(!ethereum[currency.toLowerCase()]) {
+        return res.status(500)
+            .json({
+                msg: `No conversion rate is available for ${currency}`
+            });
+    }
+
     const conversionRate = ethereum[currency.toLowerCase()];
     const ethToSplit = (Number(amount) / conversionRate).toFixed(8);
     const weiToSplit = utils.parseEther(ethToSplit.toString());
