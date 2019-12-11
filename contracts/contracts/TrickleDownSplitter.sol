@@ -50,7 +50,8 @@ contract TrickleDownSplitter is Pausable, WhitelistedRole {
     function splitFunds(uint256 value)
     external payable
     whenNotPaused
-    onlyWhenContractHasABalance {
+    onlyWhenContractHasABalance
+    onlyWhitelisted {
         require(value > 0, "No value has been specified");
 
         uint256 modulo = 10000;

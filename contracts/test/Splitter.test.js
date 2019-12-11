@@ -113,10 +113,13 @@ contract('Trickle down tests', function ([creator, another, random, ...accounts]
             await this.splitter.pause(fromCreator);
             await expectRevert.unspecified(this.splitter.splitFunds(0, fromCreator));
         });
-
         describe('when participants have been set', function () {
             beforeEach(async function () {
                 await this.splitter.setParticipants(participants, fromCreator);
+            });
+
+            it('should revert when the not whitelisted', async function () {
+                await expectRevert.unspecified(this.splitter.splitFunds(oneEth, fromRandom));
             });
 
             it('evenly splits the funds', async function () {
