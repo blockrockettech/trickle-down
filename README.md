@@ -20,8 +20,8 @@ Smart Contract Makeup
 ##### Methods
 
 * `addParticipant(address)` - add an address to split funds recipient list
-* `removeParticipantAtIndex(index)` - remove the address from the split funds recipient
-* `splitFunds(uint256 value)` - splits the value between the participants
+* `removeParticipantAtIndex(address)` - remove the address from the split funds recipient
+* `splitFunds(value)` - splits the value between the participants
 
 API Method
 ========
