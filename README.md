@@ -14,7 +14,7 @@ Smart Contract Makeup
 * Contracts are deployed to `Ropsten` and `Mainnet`
 
 * Addreses:
-  * Rposten - https://ropsten.etherscan.io/address/0x0BA2b2e2107CE768fB96c5Aa6d2973509c387218
+  * Ropsten - https://ropsten.etherscan.io/address/0x0BA2b2e2107CE768fB96c5Aa6d2973509c387218
   * Mainnet - TODO
 
 ##### Methods
@@ -42,7 +42,7 @@ Will return JSON containing the following payload:
 
 * `{"api":"0.999941168 ETH","contract":"2.985955954545 ETH"}`
 
-#### Splif Funds
+#### Split Funds
 
 e.g.
 ```bash
