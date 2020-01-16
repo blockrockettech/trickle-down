@@ -14,7 +14,7 @@ Smart Contract Makeup
 * Contracts are deployed to `Ropsten` and `Mainnet`
 
 * Addreses:
-  * Ropsten - https://ropsten.etherscan.io/address/0x0BA2b2e2107CE768fB96c5Aa6d2973509c387218
+  * Ropsten - https://ropsten.etherscan.io/address/0x23EeCcf90Fb2c508C9F1453203b72aD943ED8603
   * Mainnet - TODO
 
 ##### Methods
