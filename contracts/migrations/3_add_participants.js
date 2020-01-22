@@ -26,6 +26,9 @@ const participants = [
     '0x7CC2fD8F02DC0A41766Bc358c0D71f73eC4f4C63',
     '0x623A9BAab04596C550fcA7f64868Fb6BD2b734F1',
     '0x83C58787A2b79d516e5010F5B15CfAb4E5819fF7',
+    '0x3013b8e2cd95260256ceb1d4E00A56933536724f',
+    '0x911B5A55Cf64A3d738cba08aB834298476a91B28',
+    '0x12F0c5195197Eb4A7E99d4f87B666bcEC05BE48e'
 ];
 
 
@@ -37,5 +40,5 @@ module.exports = async function (deployer, network, accounts) {
     const splitter = await TrickleDownSplitter.deployed();
     console.log('splitter.address', splitter.address);
 
-    await splitter.setParticipants(participants, { from: creator });
+    await splitter.setParticipants(participants, {from: creator});
 };
