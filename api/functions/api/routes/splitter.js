@@ -41,6 +41,13 @@ splitter.post('/split', async (req, res, next) => {
             });
     }
 
+    if (amount && Number(amount) <= 0) {
+        return res.status(500)
+            .json({
+                msg: 'Amount too low - must be greater than 0'
+            });
+    }
+
     const coinGeckoPriceUrl = "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd,gbp,eur";
     const coinGeckoPrices = (await axios.get(coinGeckoPriceUrl)).data;
     const { ethereum } = coinGeckoPrices;
@@ -52,12 +59,17 @@ splitter.post('/split', async (req, res, next) => {
             });
     }
 
+    console.log(`Incoming request to split funds`, JSON.stringify(req.body));
+
     const conversionRate = ethereum[currency.toLowerCase()];
     const ethToSplit = (Number(amount) / conversionRate).toFixed(8);
     const weiToSplit = utils.parseEther(ethToSplit.toString());
 
     const chainId = req.params.chainId;
     const wallet = getWallet(chainId);
+
+    console.log(`Attempting to split funds - conversionRate=[${conversionRate}] ethToSplit=[${ethToSplit}] weiToSplit=[${weiToSplit}] chainId=[${chainId}]`);
+
     const tx = await splitFunds(wallet, chainId, weiToSplit);
 
     return res.status(200)
