@@ -9,7 +9,7 @@
   "author": "Blockrocket.tech",
   "license": "MIT",
   "dependencies": {
-    "@openzeppelin/contracts": "^2.3.0",
+    "@openzeppelin/contracts": "^4.4.2",
     "@truffle/hdwallet-provider": "^1.0.24",
     "chai": "^4.2.0",
     "coveralls": "^3.0.7",
