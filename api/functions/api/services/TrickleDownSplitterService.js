@@ -13,9 +13,7 @@ async function splitFunds(signer, network, weiToSplit) {
         TrickleDownSplitterTruffleConfig.abi,
         signer
     );
-    return await contract.splitFunds(utils.bigNumberify(weiToSplit), {
-        gasLimit: 400000
-    });
+    return await contract.splitFunds(utils.bigNumberify(weiToSplit));
 }
 
 module.exports = {
