@@ -13,7 +13,7 @@
     "@truffle/hdwallet-provider": "^1.0.24",
     "chai": "^4.2.0",
     "coveralls": "^3.0.7",
-    "eth-gas-reporter": "^0.2.12",
+    "eth-gas-reporter": "^0.2.25",
     "openzeppelin-test-helpers": "^0.5.1",
     "solidity-coverage": "^0.6.7",
     "truffle-plugin-verify": "^0.3.5"
